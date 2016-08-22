@@ -1,0 +1,4 @@
+C:\Users\beenquiver\Documents\Visual Studio 2012\Projects\WebApplication2\reslove_word\WebApplication2\bin\WebApplication2.dll
+C:\Users\beenquiver\Documents\Visual Studio 2012\Projects\WebApplication2\reslove_word\WebApplication2\bin\WebApplication2.pdb
+C:\Users\beenquiver\Documents\Visual Studio 2012\Projects\WebApplication2\reslove_word\WebApplication2\obj\x64\Debug\WebApplication2.dll
+C:\Users\beenquiver\Documents\Visual Studio 2012\Projects\WebApplication2\reslove_word\WebApplication2\obj\x64\Debug\WebApplication2.pdb
