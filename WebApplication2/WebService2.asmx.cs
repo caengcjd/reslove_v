@@ -49,11 +49,11 @@ namespace WebApplication2
         public string[] columns;
         public string[] regrex=null;
         public Boolean IsMerge=false;
-        public string root = "D:\\files\\words\\";//文件保存的路径;
-       // public string root = "E:\\files\\words\\";
-        public string OfficeFilePath = "D:\\pdf\\office\\";// "E:\\files\\office\\";
-        public string PdfFilePath = "D:\\pdf\\pdf\\";// "E:\\files\\pdfs\\";//
-        public string SWFFilePath =  "D:\\pdf\\swf\\";// "E:\\files\\swfs\\";
+       // public string root = "D:\\files\\words\\";//文件保存的路径;
+        public string root = "E:\\files\\words\\";
+        public string OfficeFilePath = "E:\\files\\office\\"; // "D:\\pdf\\office\\"; //
+        public string PdfFilePath = "E:\\files\\pdfs\\";//  "D:\\pdf\\pdf\\";//
+        public string SWFFilePath = "E:\\files\\swfs\\";    //  "D:\\pdf\\swf\\"; //
         public class finaljson
         {
 
@@ -259,9 +259,7 @@ namespace WebApplication2
                 {
                     // aaa.finalstrings.Add(nowTable.Cell(1, 2).Range.Text.Trim());
                     continue;
-
                 }
-                // aaa.finalstrings.Add(columns.ToString());
                 h = new Dictionary<string, object>();
                 h.Add("tag", tsp_mark.Match(nowTable.Cell(1, 2).Range.Text.Trim()).Groups[1].Value);
                 Dictionary<string, string> tc_2step = null; h["test steps"] = null;
@@ -290,9 +288,9 @@ namespace WebApplication2
                                 h["test steps"] = "";
                                 Cell a = tmp.Next; int start_row = tmp.RowIndex; string[] column_name = new string[nowTable.Columns.Count];int k=1;
                                 int running_row = start_row; Dictionary<string, string> tc_step = null;
-                                while (a.Next != null && a.Next.ColumnIndex != 1)
+                                while (a != null && a.ColumnIndex != 1)
                                 {
-                                   
+                                    //Debug.WriteLine("当前的Text"+a.RowIndex+a.Range.Text);
                                     if (a.RowIndex == start_row)//作为key列
                                     {
                                         Match temp = Regex.Match(a.Range.Text.Trim().Replace("\r", "").Replace("\u0007", ""), @"[\u4e00-\u9fa5\/]*(.*)?", RegexOptions.IgnoreCase);
@@ -300,8 +298,8 @@ namespace WebApplication2
                                         
                                     }
                                     else
-                                    {//作为数值列添加进去,每行都是一个tc_step吧
-
+                                    {
+                                        //分为两列和三列的情形吧,所以必须是换行的时候添加进去
                                         if (running_row != a.RowIndex&&tc_step!=null)
                                         {
                                             //此时也要把上一次tc_step加入进来
@@ -310,6 +308,7 @@ namespace WebApplication2
                                             tc_step.Add(column_name[a.ColumnIndex-1], a.Range.Text.Trim().Replace("\r", "").Replace("\u0007", ""));
                                             running_row = a.RowIndex;
                                         }
+                                       
                                         else if (running_row != a.RowIndex && tc_step == null)
                                         {
                                             tc_step = new Dictionary<string, string>();
@@ -318,9 +317,9 @@ namespace WebApplication2
                                         }
                                         else if (tc_step != null )
                                         {
-
+                                            Debug.WriteLine("当前的col{0},{1}", column_name[a.ColumnIndex - 1], a.Range.Text);
                                             tc_step.Add(column_name[a.ColumnIndex - 1], a.Range.Text.Trim().Replace("\r", "").Replace("\u0007", ""));
-
+                                            
                                         }
 
                                     }//else
@@ -328,6 +327,7 @@ namespace WebApplication2
                                     a = a.Next;
 
                                 }//while 循环结束的情况哦
+                                  if(tc_step!=null)h["test steps"] += (new JavaScriptSerializer().Serialize(tc_step)) + ",";      
                                  if(h["test steps"].ToString().Length>0)h["test steps"] = "[" + h["test steps"].ToString().Substring(0, h["test steps"].ToString().Length - 1) + "]";
                                
 
@@ -437,24 +437,27 @@ namespace WebApplication2
                                 default:
                                     if (rowPos != 1) { h.Add(flag, text); continue; }
                                     string text1 = nowTable.Rows[rowPos].Cells[2].Range.Text.Trim().Replace("\u0007", "");
-                                    foreach (string aa in regrex)
+                                    if (regrex != null)
                                     {
-                                        string a = aa.ToLower().Trim(); string key = null, value = null;
-                                        MatchCollection matches = Regex.Matches(@text1, @a, RegexOptions.IgnoreCase);
-                                        Debug.WriteLine("reg : {0} ;  text :{1}", a, text1);// ,  all : {1}", a);, new JavaScriptSerializer().Serialize(regrex));
-                                        foreach (Match match in matches)
+                                        foreach (string aa in regrex)
                                         {
-                                            GroupCollection groups = match.Groups;//h.Add(a, null);
-                                            key = groups[1].ToString().Trim(); value = groups[2].ToString().Trim();
-                                            Debug.WriteLine("key: {0} , value: {1}", key, value);
-                                            h[key] = h.ContainsKey(key) ? (h[key] += (value + ",")) : (value += ",");
+                                            string a = aa.ToLower().Trim(); string key = null, value = null;
+                                            MatchCollection matches = Regex.Matches(@text1, @a, RegexOptions.IgnoreCase);
+                                            Debug.WriteLine("reg : {0} ;  text :{1}", a, text1);// ,  all : {1}", a);, new JavaScriptSerializer().Serialize(regrex));
+                                            foreach (Match match in matches)
+                                            {
+                                                GroupCollection groups = match.Groups;//h.Add(a, null);
+                                                key = groups[1].ToString().Trim(); value = groups[2].ToString().Trim();
+                                                Debug.WriteLine("key: {0} , value: {1}", key, value);
+                                                h[key] = h.ContainsKey(key) ? (h[key] += (value + ",")) : (value += ",");
 
-                                        }
-                                        //最后一次的
-                                        if (key != null && h.ContainsKey(key) && h[key].ToString().Length != 0 && h[key].ToString().LastIndexOf(',') == h[key].ToString().Length - 1) h[key] = h[key].ToString().Substring(0, h[key].ToString().Length - 1);
+                                            }
+                                            //最后一次的
+                                            if (key != null && h.ContainsKey(key) && h[key].ToString().Length != 0 && h[key].ToString().LastIndexOf(',') == h[key].ToString().Length - 1) h[key] = h[key].ToString().Substring(0, h[key].ToString().Length - 1);
 
-                              
-                                    }//foreach
+
+                                        }//foreach
+                                    }//if
                                     Match match_desc = Regex.Match(text, @"\]([^\[\]#]*)", RegexOptions.IgnoreCase);
                                     if (match_desc.Success) { h.Add(flag, match_desc.Groups[1].Value); }
 
@@ -564,7 +567,7 @@ namespace WebApplication2
             String LocalPath = null;
             string column = key_values.ContainsKey("column") ? key_values["column"].ToString() : "", type = key_values.ContainsKey("type") ? key_values["type"].ToString() : "", doc_url = key_values.ContainsKey("doc_url") ? key_values["doc_url"].ToString() : "";
             regrex = (key_values.ContainsKey("regrex") && key_values["regrex"].ToString()!="") ? System.Web.HttpUtility.UrlDecode(key_values["regrex"].ToString()).Split(',') : null;
-            IsMerge = (key_values.ContainsKey("ismerge") && key_values["ismerge"].ToString() != "" && key_values["ismerge"].ToString()!="") ? true : false;
+            IsMerge = (key_values.ContainsKey("ismerge") && key_values["ismerge"].ToString() != ""&& key_values["ismerge"].ToString() != "0") ? true : false;
             if (column.Equals("") || type.Equals("") || doc_url.Equals(""))
                 throw new Exception("输入参数不合法");
             //  return column;  
